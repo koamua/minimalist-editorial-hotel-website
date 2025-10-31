@@ -28,6 +28,12 @@ const eslintConfig = [
       'import/no-useless-path-segments': 'error',
     },
   },
+  {
+    files: ['src/visual-edits/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ]
  
 export default eslintConfig
