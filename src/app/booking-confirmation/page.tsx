@@ -6,6 +6,11 @@ import { motion } from "framer-motion";
 import { Check, Calendar, Users, Mail, Phone, Home, Hotel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface SelectedRoom {
+  name: string;
+  price: string;
+}
+
 export default function BookingConfirmation() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -13,6 +18,18 @@ export default function BookingConfirmation() {
 
   useEffect(() => {
     // Get booking data from URL params
+    const roomsParam = searchParams.get("rooms");
+    let rooms: SelectedRoom[] = [];
+    
+    // Parse rooms if available
+    if (roomsParam) {
+      try {
+        rooms = JSON.parse(roomsParam);
+      } catch (e) {
+        console.error("Failed to parse rooms:", e);
+      }
+    }
+
     const data = {
       name: searchParams.get("name"),
       email: searchParams.get("email"),
@@ -21,8 +38,7 @@ export default function BookingConfirmation() {
       checkOut: searchParams.get("checkOut"),
       guests: searchParams.get("guests"),
       message: searchParams.get("message"),
-      room: searchParams.get("room"),
-      price: searchParams.get("price"),
+      rooms: rooms,
     };
 
     if (!data.name || !data.email) {
@@ -87,25 +103,48 @@ export default function BookingConfirmation() {
           <h3 className="mb-8 text-center text-neutral-900">Your Booking Details</h3>
 
           <div className="space-y-6">
-            {/* Room Information - Show first if available */}
-            {bookingData.room && (
+            {/* Room Information - Show all selected rooms */}
+            {bookingData.rooms && bookingData.rooms.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex items-start gap-4 border-b border-neutral-200 pb-6"
+                className="border-b border-neutral-200 pb-6"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-beige">
-                  <Hotel className="h-5 w-5 text-neutral-900" />
-                </div>
-                <div className="flex-1">
-                  <p className="mb-1 text-sm uppercase tracking-wider text-neutral-600">Selected Room</p>
-                  <p className="text-lg font-medium text-neutral-900">{bookingData.room}</p>
-                  {bookingData.price && (
-                    <p className="mt-1 text-neutral-700">
-                      <span className="text-xl font-semibold">{bookingData.price}</span> per night
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-beige">
+                    <Hotel className="h-5 w-5 text-neutral-900" />
+                  </div>
+                  <div>
+                    <p className="text-sm uppercase tracking-wider text-neutral-600">
+                      Selected Room{bookingData.rooms.length > 1 ? "s" : ""}
                     </p>
-                  )}
+                    <p className="text-lg font-medium text-neutral-900">
+                      {bookingData.rooms.length} {bookingData.rooms.length === 1 ? "Room" : "Rooms"}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="ml-0 space-y-3 md:ml-13">
+                  {bookingData.rooms.map((room: SelectedRoom, index: number) => (
+                    <motion.div
+                      key={`${room.name}-${index}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                      className="flex items-center justify-between rounded-sm bg-neutral-50 p-4"
+                    >
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-neutral-600">Room {index + 1}</p>
+                        <p className="text-lg font-medium text-neutral-900">{room.name}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-neutral-600">From</p>
+                        <p className="text-xl font-semibold text-neutral-900">{room.price}</p>
+                        <p className="text-xs text-neutral-600">per night</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             )}

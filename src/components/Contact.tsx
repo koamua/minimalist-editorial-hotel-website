@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, useInView } from "framer-motion";
-import { Hotel } from "lucide-react";
+import { Hotel, X, Plus } from "lucide-react";
+
+interface SelectedRoom {
+  name: string;
+  price: string;
+}
 
 export default function Contact() {
   const router = useRouter();
@@ -15,8 +20,7 @@ export default function Contact() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
-  const [roomPrice, setRoomPrice] = useState<string | null>(null);
+  const [selectedRooms, setSelectedRooms] = useState<SelectedRoom[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,11 +36,25 @@ export default function Contact() {
     // Get room info from URL params
     const room = searchParams.get("room");
     const price = searchParams.get("price");
-    if (room) {
-      setSelectedRoom(room);
-      setRoomPrice(price);
+    if (room && price) {
+      // Check if room is already selected
+      const isAlreadySelected = selectedRooms.some(r => r.name === room);
+      if (!isAlreadySelected) {
+        setSelectedRooms(prev => [...prev, { name: room, price }]);
+      }
     }
   }, [searchParams]);
+
+  const handleRemoveRoom = (roomName: string) => {
+    setSelectedRooms(prev => prev.filter(room => room.name !== roomName));
+  };
+
+  const handleChangeRooms = () => {
+    const roomsSection = document.getElementById("rooms");
+    if (roomsSection) {
+      roomsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +70,9 @@ export default function Contact() {
       message: formData.message,
     });
 
-    // Add room info if selected
-    if (selectedRoom) {
-      params.append("room", selectedRoom);
-    }
-    if (roomPrice) {
-      params.append("price", roomPrice);
+    // Add all selected rooms as JSON
+    if (selectedRooms.length > 0) {
+      params.append("rooms", JSON.stringify(selectedRooms));
     }
     
     // Navigate to confirmation page
@@ -114,29 +129,63 @@ export default function Contact() {
           </p>
         </motion.div>
 
-        {/* Selected Room Display */}
-        {selectedRoom && (
+        {/* Selected Rooms Display */}
+        {selectedRooms.length > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 rounded-sm bg-beige p-6 shadow-sm"
+            className="mb-8 space-y-4"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-900">
-                <Hotel className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm uppercase tracking-wider text-neutral-600">Selected Room</p>
-                <p className="text-xl font-medium text-neutral-900">{selectedRoom}</p>
-              </div>
-              {roomPrice && (
-                <div className="text-right">
-                  <p className="text-sm text-neutral-600">From</p>
-                  <p className="text-2xl font-semibold text-neutral-900">{roomPrice}</p>
-                  <p className="text-xs text-neutral-600">per night</p>
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-neutral-900">
+                Selected Room{selectedRooms.length > 1 ? "s" : ""} ({selectedRooms.length})
+              </h3>
+              <Button
+                type="button"
+                onClick={handleChangeRooms}
+                variant="outline"
+                size="sm"
+                className="gap-2 border-neutral-300 text-neutral-900 hover:bg-neutral-100"
+              >
+                <Plus className="h-4 w-4" />
+                Add More Rooms
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {selectedRooms.map((room, index) => (
+                <motion.div
+                  key={`${room.name}-${index}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="flex items-center gap-4 rounded-sm bg-beige p-4 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900">
+                    <Hotel className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm uppercase tracking-wider text-neutral-600">Room {index + 1}</p>
+                    <p className="text-lg font-medium text-neutral-900">{room.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-neutral-600">From</p>
+                    <p className="text-xl font-semibold text-neutral-900">{room.price}</p>
+                    <p className="text-xs text-neutral-600">per night</p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => handleRemoveRoom(room.name)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 shrink-0 p-0 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
