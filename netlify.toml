@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  NEXT_PRIVATE_TARGET = "server"
   NPM_FLAGS = "--legacy-peer-deps"
 
 [[plugins]]
