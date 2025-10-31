@@ -1,25 +1,29 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // DÉSACTIVE LE FAVICON AUTO DE NEXT.JS
   images: {
-    unoptimized: true, // Fixe les images pour Netlify
+    unoptimized: true,
   },
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
-  },
-  // Force le favicon statique - évite le bug metadata
+  // Force le favicon statique depuis public/
+  assetPrefix: '',
   async headers() {
     return [
       {
         source: '/favicon.ico',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-    ]
-  }
-}
+    ];
+  },
+  // SUPPRIME LE FAVICON DE MÉTADATA
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+};
 
-export default nextConfig
+// FORCER LE FAVICON À NE PAS ÊTRE GÉNÉRÉ
+delete nextConfig.metadata;
+delete nextConfig.icons;
+
+export default nextConfig;
