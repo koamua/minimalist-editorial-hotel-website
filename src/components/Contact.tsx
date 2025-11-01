@@ -57,9 +57,11 @@ export default function Contact() {
       const detail = (e as CustomEvent)?.detail as { name?: string; price?: string } | undefined;
       if (!detail || !detail.name || !detail.price) return;
       setSelectedRooms(prev => {
-        const isAlreadySelected = prev.some(r => r.name === detail.name);
+        const name = detail.name as string;
+        const price = detail.price as string;
+        const isAlreadySelected = prev.some(r => r.name === name);
         if (isAlreadySelected) return prev;
-        return [...prev, { name: detail.name, price: detail.price }];
+        return [...prev, { name, price }];
       });
       // remove room query params from URL to avoid duplicate additions on reload
       try {
