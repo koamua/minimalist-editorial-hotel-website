@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,19 +31,23 @@ export default function Contact() {
     message: "",
   });
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
-    // Get room info from URL params (client-side)
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get("room");
-    const price = params.get("price");
+    // Get room info from URL params (client-side). We use useSearchParams so
+    // the effect re-runs when the query string changes (e.g. user clicks
+    // "Reserve" which updates the URL without remounting the component).
+    if (!searchParams) return;
+    const room = searchParams.get("room");
+    const price = searchParams.get("price");
     if (room && price) {
-      // Check if room is already selected
-      const isAlreadySelected = selectedRooms.some(r => r.name === room);
-      if (!isAlreadySelected) {
-        setSelectedRooms(prev => [...prev, { name: room, price }]);
-      }
+      setSelectedRooms(prev => {
+        const isAlreadySelected = prev.some(r => r.name === room);
+        if (isAlreadySelected) return prev;
+        return [...prev, { name: room, price }];
+      });
     }
-  }, []);
+  }, [searchParams]);
 
   const handleRemoveRoom = (roomName: string) => {
     setSelectedRooms(prev => prev.filter(room => room.name !== roomName));
