@@ -49,6 +49,33 @@ export default function Contact() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // Listen for explicit in-app events dispatched when a room is reserved so
+    // we can update the UI immediately (works even if URL doesn't trigger an update).
+    const handler = (e: Event) => {
+      // event may be a CustomEvent with detail containing the room
+      const detail = (e as CustomEvent)?.detail as { name?: string; price?: string } | undefined;
+      if (!detail || !detail.name || !detail.price) return;
+      setSelectedRooms(prev => {
+        const isAlreadySelected = prev.some(r => r.name === detail.name);
+        if (isAlreadySelected) return prev;
+        return [...prev, { name: detail.name, price: detail.price }];
+      });
+      // remove room query params from URL to avoid duplicate additions on reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("room");
+        url.searchParams.delete("price");
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (err) {
+        // ignore in non-browser environments
+      }
+    };
+
+    window.addEventListener("roomSelected", handler as EventListener);
+    return () => window.removeEventListener("roomSelected", handler as EventListener);
+  }, []);
+
   const handleRemoveRoom = (roomName: string) => {
     setSelectedRooms(prev => prev.filter(room => room.name !== roomName));
   };
