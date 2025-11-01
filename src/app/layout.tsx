@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Hôtel Minimaliste - Démo",
   description: "Site moderne pour hôtels - design épuré et performant",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -18,7 +21,7 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         {/* Favicon manuel - évite le bug Next.js */}
-        
+        <link rel="icon" href="/favicon.svg" />
       </head>
       <body className={inter.className}>{children}</body>
     </html>

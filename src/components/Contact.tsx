@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,6 @@ interface SelectedRoom {
 
 export default function Contact() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -33,9 +32,10 @@ export default function Contact() {
   });
 
   useEffect(() => {
-    // Get room info from URL params
-    const room = searchParams.get("room");
-    const price = searchParams.get("price");
+    // Get room info from URL params (client-side)
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get("room");
+    const price = params.get("price");
     if (room && price) {
       // Check if room is already selected
       const isAlreadySelected = selectedRooms.some(r => r.name === room);
@@ -43,7 +43,7 @@ export default function Contact() {
         setSelectedRooms(prev => [...prev, { name: room, price }]);
       }
     }
-  }, [searchParams]);
+  }, []);
 
   const handleRemoveRoom = (roomName: string) => {
     setSelectedRooms(prev => prev.filter(room => room.name !== roomName));
