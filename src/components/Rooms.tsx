@@ -39,6 +39,16 @@ export default function Rooms() {
     if (contactSection) {
       // Scroll to contact form and pass room info via URL
       router.push(`/?room=${encodeURIComponent(roomName)}&price=${encodeURIComponent(roomPrice)}#contact`);
+      // Also dispatch a custom event so the Contact component updates immediately
+      try {
+        window.dispatchEvent(
+          new CustomEvent("roomSelected", {
+            detail: { name: roomName, price: roomPrice },
+          }),
+        );
+      } catch (e) {
+        // ignore in non-browser environments
+      }
       setTimeout(() => {
         contactSection.scrollIntoView({ behavior: "smooth" });
       }, 100);

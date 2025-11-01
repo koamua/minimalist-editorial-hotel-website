@@ -16,7 +16,6 @@ interface SelectedRoom {
 
 export default function Contact() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -32,18 +31,52 @@ export default function Contact() {
     message: "",
   });
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
-    // Get room info from URL params
+    // Get room info from URL params (client-side). We use useSearchParams so
+    // the effect re-runs when the query string changes (e.g. user clicks
+    // "Reserve" which updates the URL without remounting the component).
+    if (!searchParams) return;
     const room = searchParams.get("room");
     const price = searchParams.get("price");
     if (room && price) {
-      // Check if room is already selected
-      const isAlreadySelected = selectedRooms.some(r => r.name === room);
-      if (!isAlreadySelected) {
-        setSelectedRooms(prev => [...prev, { name: room, price }]);
-      }
+      setSelectedRooms(prev => {
+        const isAlreadySelected = prev.some(r => r.name === room);
+        if (isAlreadySelected) return prev;
+        return [...prev, { name: room, price }];
+      });
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    // Listen for explicit in-app events dispatched when a room is reserved so
+    // we can update the UI immediately (works even if URL doesn't trigger an update).
+    const handler = (e: Event) => {
+      // event may be a CustomEvent with detail containing the room
+      const detail = (e as CustomEvent)?.detail as { name?: string; price?: string } | undefined;
+      if (!detail || !detail.name || !detail.price) return;
+      setSelectedRooms(prev => {
+        const name = detail.name as string;
+        const price = detail.price as string;
+        const isAlreadySelected = prev.some(r => r.name === name);
+        if (isAlreadySelected) return prev;
+        return [...prev, { name, price }];
+      });
+      // remove room query params from URL to avoid duplicate additions on reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("room");
+        url.searchParams.delete("price");
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (err) {
+        // ignore in non-browser environments
+      }
+    };
+
+    window.addEventListener("roomSelected", handler as EventListener);
+    return () => window.removeEventListener("roomSelected", handler as EventListener);
+  }, []);
 
   const handleRemoveRoom = (roomName: string) => {
     setSelectedRooms(prev => prev.filter(room => room.name !== roomName));
