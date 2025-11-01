@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, Calendar, Users, Mail, Phone, Home, Hotel } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,12 @@ interface SelectedRoom {
 
 export default function BookingConfirmation() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [bookingData, setBookingData] = useState<any>(null);
 
   useEffect(() => {
-    // Get booking data from URL params
-    const roomsParam = searchParams.get("rooms");
+  // Get booking data from URL params (use window.location in client component)
+  const params = new URLSearchParams(window.location.search);
+  const roomsParam = params.get("rooms");
     let rooms: SelectedRoom[] = [];
     
     // Parse rooms if available
@@ -31,13 +31,13 @@ export default function BookingConfirmation() {
     }
 
     const data = {
-      name: searchParams.get("name"),
-      email: searchParams.get("email"),
-      phone: searchParams.get("phone"),
-      checkIn: searchParams.get("checkIn"),
-      checkOut: searchParams.get("checkOut"),
-      guests: searchParams.get("guests"),
-      message: searchParams.get("message"),
+      name: params.get("name"),
+      email: params.get("email"),
+      phone: params.get("phone"),
+      checkIn: params.get("checkIn"),
+      checkOut: params.get("checkOut"),
+      guests: params.get("guests"),
+      message: params.get("message"),
       rooms: rooms,
     };
 
@@ -47,7 +47,7 @@ export default function BookingConfirmation() {
     } else {
       setBookingData(data);
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
