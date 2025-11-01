@@ -11,13 +11,14 @@ type ReporterProps = {
 export default function ErrorReporter({ error, reset }: ReporterProps) {
   /* ─ instrumentation shared by every route ─ */
   const lastOverlayMsg = useRef("");
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     const inIframe = window.parent !== window;
     if (!inIframe) return;
 
-    const send = (payload: unknown) => window.parent.postMessage(payload, "*");
+    const send = (payload: unknown) =>
+      window.parent.postMessage(payload, "*");
 
     const onError = (e: ErrorEvent) =>
       send({
@@ -48,7 +49,7 @@ export default function ErrorReporter({ error, reset }: ReporterProps) {
       const overlay = document.querySelector("[data-nextjs-dialog-overlay]");
       const node =
         overlay?.querySelector(
-          "h1, h2, .error-message, [data-nextjs-dialog-body]"
+          "h1, h2, .error-message, [data-nextjs-dialog-body]",
         ) ?? null;
       const txt = node?.textContent ?? node?.innerHTML ?? "";
       if (txt && txt !== lastOverlayMsg.current) {
@@ -87,7 +88,7 @@ export default function ErrorReporter({ error, reset }: ReporterProps) {
         timestamp: Date.now(),
         userAgent: navigator.userAgent,
       },
-      "*"
+      "*",
     );
   }, [error]);
 
